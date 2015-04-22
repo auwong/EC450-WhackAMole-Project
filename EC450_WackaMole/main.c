@@ -56,8 +56,8 @@ void main() {
     BCSCTL1 = CALBC1_1MHZ; // 1Mhz calibration for clock
 	DCOCTL = CALDCO_1MHZ;
 
-	mole_interval = 300;
-	next_mole = 400;
+	mole_interval = 100;
+	next_mole = 100;
 	rand = 0;
 	state = 'r';
 	init_timer();
@@ -115,7 +115,7 @@ interrupt void WDT_interval_handler(){
 	if(state == 'p'){
 		// play the thing here
 		if(--next_mole==0){
-			mole_interval = 200 - (stage*20);
+			mole_interval = 100 - (stage*20);
 			//int rand_on = (rand() % 4) + 1;
 			rand_on = rand_on + 1;
 			if (rand_on > 4) rand_on = 1;
@@ -137,6 +137,7 @@ interrupt void WDT_interval_handler(){
 					mole4_count = mole_interval;
 					} break;
 			}
+			next_mole = mole_interval;
 		}
 		
 		if(mole1_on==1){
