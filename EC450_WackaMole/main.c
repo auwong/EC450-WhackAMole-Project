@@ -15,6 +15,7 @@
 ////Variables
 volatile unsigned soundOn=0; // state of sound: 0 or OUTMOD_4 (0x0080)
 volatile unsigned char state=0;
+volatile unsigned char countOn=0;
 volatile unsigned char soundTime=0;
 volatile unsigned int misses=0; // how many times the player has missed a mole
 volatile unsigned int hits = 0;	// how many times the player hits a mole
@@ -44,6 +45,7 @@ volatile unsigned char last_mole2;
 volatile unsigned char last_mole3;
 volatile unsigned char last_mole4;
 volatile unsigned char last_play;
+volatile unsigned char last_release_mole;
 
 
 ////Initialize functions
@@ -126,7 +128,7 @@ interrupt void WDT_interval_handler(){
 	mole3 = (P2IN & MOLE_BUTTON3);
 	mole4 = (P2IN & MOLE_BUTTON4);
 	play = (P1IN & SR_BUTTON);		// start/reset button
-	//reset = (P1IN & rest_button); //need reset button
+
 	
 	if (soundOn!=0)
 		soundTime++;
@@ -135,8 +137,9 @@ interrupt void WDT_interval_handler(){
 		// play the thing here
 		if(--next_mole==0){
 			mole_interval = 100 - (stage*20);
-			//int rand_on = (rand() % 4) + 1;
-			rand_on = rand_on + 1;
+			rand_on = (temp % 4) + 1;
+			//temp = 0;
+			//rand_on = rand_on + 1;
 			if (rand_on > 4) rand_on = 1;
 			switch(rand_on){
 				case 1:{
@@ -221,6 +224,8 @@ interrupt void WDT_interval_handler(){
 	if(last_play && (play==0)){
 		if(state == 'r'){
 			state = 'p';
+			soundOn ^= OUTMOD_4;
+			countOn = 1;
 		} else if(state == 'p'){
 			// do some more resetting stuff in here
 			misses = 0;
@@ -232,33 +237,56 @@ interrupt void WDT_interval_handler(){
 			mole2_on = 0;
 			mole3_on = 0;
 			mole4_on = 0;
+			P1OUT &= ~(MOLE_LED1+MOLE_LED2+MOLE_LED3+MOLE_LED4);	//Turn off LEDs
 			state = 'r';
 		}
+	} else if ((last_play==0) && (play!=0)){
+		//P1OUT ^= MOLE_LED1;
+		countOn = 0;
 	}
 	last_play = play;
 	
 	if(last_mole1 && (mole1==0)){
-		P1OUT ^= MOLE_LED1;			//temp test
+		//P1OUT ^= MOLE_LED1;			//temp test
 		soundOn ^= OUTMOD_4;
+		countOn = 1;
+	} else if ((last_mole1==0) && (mole1!=0)){
+		//P1OUT ^= MOLE_LED1;
+		countOn = 0;
 	}
 	last_mole1 = mole1;
 	
 	if(last_mole2 && (mole2==0)){
-		P1OUT ^= MOLE_LED2;			//temp test
+		//P1OUT ^= MOLE_LED2;			//temp test
 		soundOn ^= OUTMOD_4;
+		countOn = 1;
+	} else if ((last_mole2==0) && (mole2!=0)){
+		//P1OUT ^= MOLE_LED2;
+		countOn = 0;
 	}
 	last_mole2 = mole2;
 	
 	if(last_mole3 && (mole3==0)){
-		P1OUT ^= MOLE_LED3;			//temp test
+		//P1OUT ^= MOLE_LED3;			//temp test
 		soundOn ^= OUTMOD_4;
+		countOn = 1;
+	} else if ((last_mole3==0) && (mole3!=0)){
+		//P1OUT ^= MOLE_LED3;
+		countOn = 0;
 	}
 	last_mole3 = mole3;
 	
 	if(last_mole4 && (mole4==0)){
-		P1OUT ^= MOLE_LED4;			//temp test
+		//P1OUT ^= MOLE_LED4;			//temp test
 		soundOn ^= OUTMOD_4;
+		countOn = 1;
+	} else if ((last_mole4==0) && (mole4!=0)){
+		//P1OUT ^= MOLE_LED4;
+		countOn = 0;
 	}
 	last_mole4 = mole4;
+
+	if(countOn)
+		temp++;
 }
 ISR_VECTOR(WDT_interval_handler, ".int10")
