@@ -23,6 +23,8 @@ volatile unsigned int stage=0;  // current stage which will set the speed of the
 volatile unsigned int next_mole=0;	// time before the next mole will be turned on
 volatile unsigned int mole_counter=0;	// counts down to determine how long the mole should be up
 volatile unsigned int mole_interval=0;	// sets how long the mole stays up
+volatile int new_high_score;
+volatile int current_score = 0;
 
 volatile unsigned int mole1_count=0;
 volatile unsigned int mole2_count=0;
@@ -34,7 +36,7 @@ volatile unsigned int mole2_on=0;	// set to 1 if mole2 is up, 0 if off
 volatile unsigned int mole3_on=0;	// set to 1 if mole3 is up, 0 if off
 volatile unsigned int mole4_on=0;	// set to 1 if mole4 is up, 0 if off
 
-volatile unsigned int rand=0;		// not sure what to do with this yet...
+volatile unsigned int rand=0;		// result from random_gen gets put into here
 volatile unsigned int rand_on=1;
 
 volatile unsigned char last_mole1;
@@ -48,17 +50,55 @@ void init_timer(void); // routine to setup the timer
 void init_buttons(void);	//setup buttons and LEDs
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++// Flash
+//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+//Information memory / flash memory variable
+#pragma DATA_SECTION(high_score,".infoD");
+volatile const int high_score=0;
+void eraseD(){ // erase information memory segment D
+	// assumes watchdog timer already disabled (which is necessary)
+	FCTL2 = FWKEY+FSSEL_2+3; // SMCLK source + divisor 24 (assuming 1Mhz clock)
+	FCTL3 = FWKEY; // unlock flash (except for segment A)
+	FCTL1 = FWKEY+ERASE; // setup to erase
+	*( (int *) 0x1000) = 0; // dummy write to segment D word 0
+	/* since this code is in flash, there is no need to explicitly wait
+	* for completion since the CPU is stopped while the flash controller
+	* is erasing or writing
+	*/
+	FCTL1=FWKEY; // clear erase and write modes
+	FCTL3=FWKEY+LOCK; // relock the segment
+}
+void writeDword(int value, int *address){
+	// write a single word.
+	// NOTE: call only once for a given address between erases!
+	if ( (((unsigned int) address) >= 0x1000) &&
+	 (((unsigned int) address) <0x1040) ){// inside infoD?
+	FCTL3 = FWKEY; // unlock flash (except for segment A)
+	FCTL1 = FWKEY + WRT ; // enable simple write
+	*address = value; // actual write to memory
+	FCTL1 = FWKEY ; // clear write mode
+	FCTL3 = FWKEY+LOCK; // relock the segment
+	}
+}
+
+// Application level routine to update the three words stored in infoD
+void updateData(int h){
+	// writes h into the info memory
+	eraseD(); // clear infoD
+	writeDword(h,(int *) &high_score);
+}
+//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++// Main
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 
 void main() {
+	WDTCTL = WDTPW + WDTHOLD; // Stop watchdog time
+    BCSCTL1 = CALBC1_1MHZ; // 1Mhz calibration for clock
+	DCOCTL = CALDCO_1MHZ;
+
     WDTCTL = (WDTPW + WDTTMSEL + WDTCNTCL + 0 + 1); // initialize watch dog timer
 
     IE1 |= WDTIE;
-
-
-    BCSCTL1 = CALBC1_1MHZ; // 1Mhz calibration for clock
-	DCOCTL = CALDCO_1MHZ;
 
 	mole_interval = 100;
 	next_mole = 100;
@@ -67,6 +107,9 @@ void main() {
 	init_timer();
 	init_buttons();
 	
+
+	new_high_score = high_score; // initialize the high score
+
 	_bis_SR_register(GIE+LPM0_bits);// enable general interrupts and power down CPU
  }
 
@@ -265,10 +308,29 @@ interrupt void WDT_interval_handler(){
 		}
 	}
 	else if(state == 'r'){									/////////Reseted State
-		// stays paused until play is pressed, dunno if anything need to happen in here
+		if (current_score>new_high_score){		// check and see if there's a new high score
+			new_high_score=current_score;
+			updateData(new_high_score);
+		}
+		////start test flash
+/*		int a;
+		P1OUT &= ~(MOLE_LED2+MOLE_LED3+MOLE_LED4);	//Turn off LEDs
+		P2OUT &= ~MOLE_LED1;
+		for (a=0; a<high_score;a++){
+			if (a==0)
+				P2OUT ^=MOLE_LED1;
+			else if(a==1)
+				P1OUT ^=MOLE_LED2;
+			else if(a==2)
+				P1OUT ^=MOLE_LED3;
+			else if(a==3)
+				P1OUT ^=MOLE_LED4;
+		}*/
+		////end test flash
 		misses = 0;
 		hits = 0;
 		stage = 0;
+		current_score=0;
 		mole_interval = 300;
 		mole_counter = 0;
 		mole1_on = 0;
@@ -287,10 +349,12 @@ interrupt void WDT_interval_handler(){
 			state = 'p';
 			soundOn ^= OUTMOD_4;
 		} else if(state == 'p'){
-			// do some more resetting stuff in here
+			//// check and see if there's a new high score
+			////
 			misses = 0;
 			hits = 0;
 			stage = 0;
+			current_score=0;
 			mole_interval = 300;
 			mole_counter = 0;
 			mole1_on = 0;
@@ -307,6 +371,7 @@ interrupt void WDT_interval_handler(){
 	if(last_mole1 && (mole1==0)){
 		if(mole1_on){
 			hits++;
+			current_score+=(stage+1);
 			mole1_on = 0;
 		} else{
 			misses++;
@@ -319,6 +384,7 @@ interrupt void WDT_interval_handler(){
 	if(last_mole2 && (mole2==0)){
 		if(mole2_on){
 			hits++;
+			current_score+=(stage+1);
 			mole2_on = 0;
 		} else{
 			misses++;
@@ -331,6 +397,7 @@ interrupt void WDT_interval_handler(){
 	if(last_mole3 && (mole3==0)){
 		if(mole3_on){
 			hits++;
+			current_score+=(stage+1);
 			mole3_on = 0;
 		} else{
 			misses++;
@@ -343,6 +410,7 @@ interrupt void WDT_interval_handler(){
 	if(last_mole4 && (mole4==0)){
 		if(mole4_on){
 			hits++;
+			current_score+=(stage+1);
 			mole4_on = 0;
 		} else{
 			misses++;
