@@ -1,7 +1,8 @@
 #include "msp430g2553.h"
 
-#define TA0_BIT 0x20//0x01			//P1.0 - on-board red LED
-#define MOLE_LED1 0x02			//P1.1
+								//P1.1 Reserved for UART / LCD Panel
+#define TA1_BIT 0x02			//P2.1 - Theoretically for sound
+#define MOLE_LED1 0x01			//P2.0
 #define MOLE_LED2 0x04			//P1.2
 #define MOLE_LED3 0x08			//P1.3
 #define MOLE_LED4 0x10			//P1.4
@@ -69,7 +70,7 @@ void main() {
 	next_mole = 100;
 	rand = 0;
 	state = 'r';
-	init_timer();
+	//init_timer();
 	init_buttons();
 	
 	_bis_SR_register(GIE+LPM0_bits);// enable general interrupts and power down CPU
@@ -80,36 +81,96 @@ void main() {
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 
 void init_buttons(){
-	P1DIR |= MOLE_LED1+MOLE_LED2+MOLE_LED3+MOLE_LED4;		//output LEDs
-	P1OUT &= ~(MOLE_LED1+MOLE_LED2+MOLE_LED3+MOLE_LED4);	//Turn off LEDs
+	P1DIR |= MOLE_LED2+MOLE_LED3+MOLE_LED4;		//output LEDs
+	P2DIR |= MOLE_LED1;
+	P1OUT &= ~(MOLE_LED2+MOLE_LED3+MOLE_LED4);	//Turn off LEDs
+	P2OUT &= ~(MOLE_LED1);
+
 	P1OUT |= MOLE_BUTTON1+SR_BUTTON; // pullup
 	P1REN |= MOLE_BUTTON1+SR_BUTTON; // enable resistor
 	P2OUT |= MOLE_BUTTON2+MOLE_BUTTON3+MOLE_BUTTON4;
 	P2REN |= MOLE_BUTTON2+MOLE_BUTTON3+MOLE_BUTTON4;
 }
 
-void init_timer(){ 			// initialization and start of timer
+/*void init_timer(){ 			// initialization and start of timer
+	TA1CTL |=TACLR; // reset clock
+	TA1CTL =TASSEL_2+ID_0+MC_1; // clock source = SMCLK, clock divider=1, UP mode,
+	TA1CCTL0=soundOn+CCIE; // compare mode, outmod=sound, interrupt CCR1 on
+	TA1CCR0 = 1000;
+	P2SEL|=TA1_BIT; // connect timer output to pin
+	P2DIR|=TA1_BIT;
 	TA0CTL |=TACLR; // reset clock
-	TA0CTL =TASSEL_2+ID_0+MC_1; // clock source = SMCLK, clock divider=1, UP mode,
+	TA0CTL =TASSEL_2+ID_0+MC_1; // clock source = SMCLK, clock divider=1, continuous mode,
 	TA0CCTL0=soundOn+CCIE; // compare mode, outmod=sound, interrupt CCR1 on
-	TA0CCR0 = 1000;
-	P1SEL|=TA0_BIT; // connect timer output to pin
-	P1DIR|=TA0_BIT;
+	//TA0CCR0 = TAR+halfPeriod; // time for first alarm
+	TA0CCR0 =1000;
+	P2SEL|=TA1_BIT; // connect timer output to pin
+	P2DIR|=TA1_BIT;
+}*/
+
+//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+//+++++++++++++++++++++++++++++++++++++++++++++++++// Random Generator
+//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+
+unsigned random_gen(void)
+{
+  unsigned int i, j;
+  unsigned int result = 0;
+
+  // setup Timer_A
+  BCSCTL3 = (~LFXT1S_3 & BCSCTL3) | LFXT1S_2; // Source ACLK from VLO
+  TA0CCTL0 = CM_1 + CCIS_1 + CAP;
+  TA0CTL |= TASSEL_2 + MC_2;
+
+  for(i=0 ; i<16 ; i++)
+  {
+    // shift left result
+    result <<= 1;
+    char k = 0;
+
+    for (j=0 ; j<5; j++){
+
+		// wait until Capture flag is set
+		while(!(TA0CCTL0 & CCIFG));
+
+		// clear flag
+		TA0CCTL0 &= ~CCIFG;
+
+		// check LSB
+		if(TA0CCR0 & 0x01)
+		{
+		  k++;
+		}
+	}
+    if (k>=3)
+    	result |= 0x01;
+  }
+
+  return result;
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 //+++++++++++++++++++++++++++++++++++++++++++++++++// Sound handler
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 
+/*
 void interrupt sound_handler(){
 	//TA0CCR0 = 1800; // advance 'alarm' time
 	if (soundOn && soundTime>=20){
 		soundOn ^= OUTMOD_4;
 		soundTime = 0;
 	}
-	TA0CCTL0 = CCIE + soundOn; //  update control register with current soundOn
+	TA1CCTL0 = CCIE + soundOn; //  update control register with current soundOn
 }
-ISR_VECTOR(sound_handler,".int09") // declare interrupt vector
+ISR_VECTOR(sound_handler,".int13") // declare interrupt vector
+*/
+
+/*
+void interrupt random_gen_handler(){
+	/// ????
+}
+ISR_VECTOR(random_gen_handler,".int09") // declare interrupt vector
+*/
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 //+++++++++++++++++++++++++++++++++++++++++++++++++// WDT handler
@@ -137,46 +198,54 @@ interrupt void WDT_interval_handler(){
 		// play the thing here
 		if(--next_mole==0){
 			mole_interval = 100 - (stage*20);
+			temp = random_gen();
 			rand_on = (temp % 4) + 1;
-			//temp = 0;
-			//rand_on = rand_on + 1;
-			if (rand_on > 4) rand_on = 1;
 			switch(rand_on){
 				case 1:{
-					mole1_on = 1;
-					mole1_count = mole_interval;
+					if(!mole1_on){
+						mole1_on = 1;
+						mole1_count = mole_interval;
+					}
 					} break;
 				case 2:{
-					mole2_on = 1;
-					mole2_count = mole_interval;
+					if(!mole2_on){
+						mole2_on = 1;
+						mole2_count = mole_interval;
+					}
 					} break;
 				case 3:{
-					mole3_on = 1;
-					mole3_count = mole_interval;
+					if(!mole3_on){
+						mole3_on = 1;
+						mole3_count = mole_interval;
+					}
 					} break;
 				case 4:{
-					mole4_on = 1;
-					mole4_count = mole_interval;
+					if(!mole4_on){
+						mole4_on = 1;
+						mole4_count = mole_interval;
+					}
 					} break;
 			}
 			next_mole = mole_interval;
 		}
 		
-		if(mole1_on==1){
-			P1OUT |= MOLE_LED1;
+		if(mole1_on){
+			P2OUT |= MOLE_LED1;
 			if(--mole1_count==0){
 				//do stuff
+				misses++;
 				mole1_on = 0;
 			}
 		} else{
-			P1OUT &= ~MOLE_LED1;
+			P2OUT &= ~MOLE_LED1;
 			mole1_count = 0;
 		}
 		
-		if(mole2_on==1){
+		if(mole2_on){
 			P1OUT |= MOLE_LED2;
 			if(--mole2_count==0){
 				// do stuff
+				misses++;
 				mole2_on = 0;
 			}
 		} else{
@@ -184,10 +253,11 @@ interrupt void WDT_interval_handler(){
 			mole2_count = 0;
 		}
 		
-		if(mole3_on==1){
+		if(mole3_on){
 			P1OUT |= MOLE_LED3;
 			if(--mole3_count==0){
 				// do stuff
+				misses++;
 				mole3_on = 0;
 			}
 		} else{
@@ -195,10 +265,11 @@ interrupt void WDT_interval_handler(){
 			mole3_count = 0;
 		}
 		
-		if(mole4_on==1){
+		if(mole4_on){
 			P1OUT |= MOLE_LED4;
 			if(--mole4_count==0){
 				// do stuff
+				misses++;
 				mole4_on = 0;
 			}
 		} else{
@@ -217,6 +288,18 @@ interrupt void WDT_interval_handler(){
 	}
 	else if(state == 'r'){									/////////Reseted State
 		// stays paused until play is pressed, dunno if anything need to happen in here
+		misses = 0;
+		hits = 0;
+		stage = 0;
+		mole_interval = 300;
+		mole_counter = 0;
+		mole1_on = 0;
+		mole2_on = 0;
+		mole3_on = 0;
+		mole4_on = 0;
+		P1OUT &= ~(MOLE_LED2+MOLE_LED3+MOLE_LED4);	//Turn off LEDs
+		P2OUT &= ~MOLE_LED1;
+		state = 'r';
 	}
 	
 	///////////////// Button control
@@ -237,7 +320,8 @@ interrupt void WDT_interval_handler(){
 			mole2_on = 0;
 			mole3_on = 0;
 			mole4_on = 0;
-			P1OUT &= ~(MOLE_LED1+MOLE_LED2+MOLE_LED3+MOLE_LED4);	//Turn off LEDs
+			P1OUT &= ~(MOLE_LED2+MOLE_LED3+MOLE_LED4);	//Turn off LEDs
+			P2OUT &= ~MOLE_LED1;
 			state = 'r';
 		}
 	} else if ((last_play==0) && (play!=0)){
@@ -247,16 +331,28 @@ interrupt void WDT_interval_handler(){
 	last_play = play;
 	
 	if(last_mole1 && (mole1==0)){
-		//P1OUT ^= MOLE_LED1;			//temp test
+		if(mole1_on){
+			hits++;
+			mole1_on = 0;
+		} else{
+			misses++;
+		}
+		//P2OUT ^= MOLE_LED1;			//temp test
 		soundOn ^= OUTMOD_4;
 		countOn = 1;
 	} else if ((last_mole1==0) && (mole1!=0)){
-		//P1OUT ^= MOLE_LED1;
+		//P2OUT ^= MOLE_LED1;
 		countOn = 0;
 	}
 	last_mole1 = mole1;
 	
 	if(last_mole2 && (mole2==0)){
+		if(mole2_on){
+			hits++;
+			mole2_on = 0;
+		} else{
+			misses++;
+		}
 		//P1OUT ^= MOLE_LED2;			//temp test
 		soundOn ^= OUTMOD_4;
 		countOn = 1;
@@ -267,6 +363,12 @@ interrupt void WDT_interval_handler(){
 	last_mole2 = mole2;
 	
 	if(last_mole3 && (mole3==0)){
+		if(mole3_on){
+			hits++;
+			mole3_on = 0;
+		} else{
+			misses++;
+		}
 		//P1OUT ^= MOLE_LED3;			//temp test
 		soundOn ^= OUTMOD_4;
 		countOn = 1;
@@ -277,6 +379,12 @@ interrupt void WDT_interval_handler(){
 	last_mole3 = mole3;
 	
 	if(last_mole4 && (mole4==0)){
+		if(mole4_on){
+			hits++;
+			mole4_on;
+		} else{
+			misses++;
+		}
 		//P1OUT ^= MOLE_LED4;			//temp test
 		soundOn ^= OUTMOD_4;
 		countOn = 1;
