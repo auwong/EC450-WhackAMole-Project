@@ -93,13 +93,6 @@ void init_timer(){ 			// initialization and start of timer
 	TA1CCR0 = 1000;
 	P2SEL|=TA1_BIT; // connect timer output to pin
 	P2DIR|=TA1_BIT;
-	/*TA0CTL |=TACLR; // reset clock
-	TA0CTL =TASSEL_2+ID_0+MC_1; // clock source = SMCLK, clock divider=1, continuous mode,
-	TA0CCTL0=soundOn+CCIE; // compare mode, outmod=sound, interrupt CCR1 on
-	//TA0CCR0 = TAR+halfPeriod; // time for first alarm
-	TA0CCR0 =1000;
-	P2SEL|=TA1_BIT; // connect timer output to pin
-	P2DIR|=TA1_BIT;*/
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -148,7 +141,6 @@ unsigned random_gen(void)
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 
 void interrupt sound_handler(){
-	//TA0CCR0 = 1800; // advance 'alarm' time
 	if (soundOn && soundTime>=20){
 		soundOn ^= OUTMOD_4;
 		soundTime = 0;
@@ -156,11 +148,6 @@ void interrupt sound_handler(){
 	TA1CCTL1 = CCIE + soundOn; //  update control register with current soundOn
 }
 ISR_VECTOR(sound_handler,".int13") // declare interrupt vector
-
-void interrupt random_gen_handler(){
-	/// ????
-}
-ISR_VECTOR(random_gen_handler,".int09") // declare interrupt vector
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 //+++++++++++++++++++++++++++++++++++++++++++++++++// WDT handler
@@ -179,24 +166,25 @@ interrupt void WDT_interval_handler(){
 	mole3 = (P2IN & MOLE_BUTTON3);
 	mole4 = (P2IN & MOLE_BUTTON4);
 	play = (P1IN & SR_BUTTON);		// start/reset button
-
 	
+	/****************** Sound Control *******************/
 	if (soundOn!=0)
 		soundTime++;
 
+	/****************** State Control *******************/
+
 	if(state == 'p'){									/////Play state
-		// play the thing here
 		if(--next_mole==0){
 			mole_interval = 100 - (stage*20);
 			rand = random_gen();
 			rand_on = (rand % 4) + 1;
-			switch(rand_on){
+			switch(rand_on){		// picks at random the next mole
 				case 1:{
 					if(!mole1_on){
 						mole1_on = 1;
 						mole1_count = mole_interval;
 					}
-					} break;
+				}break;
 				case 2:{
 					if(!mole2_on){
 						mole2_on = 1;
@@ -292,7 +280,7 @@ interrupt void WDT_interval_handler(){
 		state = 'r';
 	}
 	
-	///////////////// Button control
+	/****************** Button control *******************/
 
 	if(last_play && (play==0)){
 		if(state == 'r'){
@@ -323,7 +311,7 @@ interrupt void WDT_interval_handler(){
 		} else{
 			misses++;
 		}
-		//P2OUT ^= MOLE_LED1;			//temp test
+		//P2OUT ^= MOLE_LED1;			// debug button operation
 		soundOn ^= OUTMOD_4;
 	}
 	last_mole1 = mole1;
@@ -335,7 +323,7 @@ interrupt void WDT_interval_handler(){
 		} else{
 			misses++;
 		}
-		//P1OUT ^= MOLE_LED2;			//temp test
+		//P1OUT ^= MOLE_LED2;			// debug button operation
 		soundOn ^= OUTMOD_4;
 	}
 	last_mole2 = mole2;
@@ -347,7 +335,7 @@ interrupt void WDT_interval_handler(){
 		} else{
 			misses++;
 		}
-		//P1OUT ^= MOLE_LED3;			//temp test
+		//P1OUT ^= MOLE_LED3;			// debug button operation
 		soundOn ^= OUTMOD_4;
 	}
 	last_mole3 = mole3;
@@ -355,11 +343,11 @@ interrupt void WDT_interval_handler(){
 	if(last_mole4 && (mole4==0)){
 		if(mole4_on){
 			hits++;
-			mole4_on;
+			mole4_on = 0;
 		} else{
 			misses++;
 		}
-		//P1OUT ^= MOLE_LED4;			//temp test
+		//P1OUT ^= MOLE_LED4;			// debug button operation
 		soundOn ^= OUTMOD_4;
 	}
 	last_mole4 = mole4;
