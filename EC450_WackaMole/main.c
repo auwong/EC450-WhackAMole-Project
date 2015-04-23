@@ -1,6 +1,6 @@
 #include "msp430g2553.h"
 
-#define TA0_BIT 0x01			//P1.0 - on-board red LED
+#define TA0_BIT 0x20//0x01			//P1.0 - on-board red LED
 #define MOLE_LED1 0x02			//P1.1
 #define MOLE_LED2 0x04			//P1.2
 #define MOLE_LED3 0x08			//P1.3
@@ -15,12 +15,17 @@
 ////Variables
 volatile unsigned soundOn=0; // state of sound: 0 or OUTMOD_4 (0x0080)
 volatile unsigned char state=0;
+volatile unsigned char soundTime=0;
 volatile unsigned int misses=0; // how many times the player has missed a mole
 volatile unsigned int hits = 0;	// how many times the player hits a mole
 volatile unsigned int stage=0;  // current stage which will set the speed of the moles (higher stage means faster moles)
 volatile unsigned int next_mole=0;	// time before the next mole will be turned on
 volatile unsigned int mole_counter=0;	// counts down to determine how long the mole should be up
 volatile unsigned int mole_interval=0;	// sets how long the mole stays up
+
+///temp
+volatile unsigned int temp = 0;
+///temp
 
 volatile unsigned int mole1_count=0;
 volatile unsigned int mole2_count=0;
@@ -45,7 +50,9 @@ volatile unsigned char last_play;
 void init_timer(void); // routine to setup the timer
 void init_buttons(void);	//setup buttons and LEDs
 
-///////////////////////////////////////////////////////////// Main
+//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++// Main
+//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 
 void main() {
     WDTCTL = (WDTPW + WDTTMSEL + WDTCNTCL + 0 + 1); // initialize watch dog timer
@@ -66,7 +73,9 @@ void main() {
 	_bis_SR_register(GIE+LPM0_bits);// enable general interrupts and power down CPU
  }
 
-/////////////////////////////////////// Init buttons and timer
+//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+//+++++++++++++++++++++++++++++++++++++++++++// Init buttons and timer
+//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 
 void init_buttons(){
 	P1DIR |= MOLE_LED1+MOLE_LED2+MOLE_LED3+MOLE_LED4;		//output LEDs
@@ -78,24 +87,31 @@ void init_buttons(){
 }
 
 void init_timer(){ 			// initialization and start of timer
-	TA0CTL |= TACLR;             // reset clock
-	TA0CTL = TASSEL1+ID_0+MC_1;  // clock source = SMCLK
-	                             // clock divider=1
-	                             // UP mode
-	                             // timer A interrupt off
-	TA0CCTL0=soundOn+CCIE;  // compare mode, output 0, no interrupt enabled
-	TA0CCR0 = TAR; 			// in up mode TAR=0... TACCRO-1
-	P1SEL|=TA0_BIT; 		// connect timer output to pin
+	TA0CTL |=TACLR; // reset clock
+	TA0CTL =TASSEL_2+ID_0+MC_1; // clock source = SMCLK, clock divider=1, UP mode,
+	TA0CCTL0=soundOn+CCIE; // compare mode, outmod=sound, interrupt CCR1 on
+	TA0CCR0 = 1000;
+	P1SEL|=TA0_BIT; // connect timer output to pin
 	P1DIR|=TA0_BIT;
 }
 
-/////////////////////////////////////////// Interrupts
+//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+//+++++++++++++++++++++++++++++++++++++++++++++++++// Sound handler
+//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 
 void interrupt sound_handler(){
-	TACCR0 += 2000; // advance 'alarm' time
+	//TA0CCR0 = 1800; // advance 'alarm' time
+	if (soundOn && soundTime>=20){
+		soundOn ^= OUTMOD_4;
+		soundTime = 0;
+	}
 	TA0CCTL0 = CCIE + soundOn; //  update control register with current soundOn
 }
 ISR_VECTOR(sound_handler,".int09") // declare interrupt vector
+
+//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+//+++++++++++++++++++++++++++++++++++++++++++++++++// WDT handler
+//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 
 interrupt void WDT_interval_handler(){
 	unsigned char mole1;
@@ -112,7 +128,10 @@ interrupt void WDT_interval_handler(){
 	play = (P1IN & SR_BUTTON);		// start/reset button
 	//reset = (P1IN & rest_button); //need reset button
 	
-	if(state == 'p'){
+	if (soundOn!=0)
+		soundTime++;
+
+	if(state == 'p'){									/////Play state
 		// play the thing here
 		if(--next_mole==0){
 			mole_interval = 100 - (stage*20);
@@ -193,10 +212,12 @@ interrupt void WDT_interval_handler(){
 			state = 'r';	// resets the game if the player misses 10 moles :(
 		}
 	}
-	else if(state == 'r'){
+	else if(state == 'r'){									/////////Reseted State
 		// stays paused until play is pressed, dunno if anything need to happen in here
 	}
 	
+	///////////////// Button control
+
 	if(last_play && (play==0)){
 		if(state == 'r'){
 			state = 'p';
@@ -216,28 +237,27 @@ interrupt void WDT_interval_handler(){
 	}
 	last_play = play;
 	
-	/*if(last_reset && (reset==0)){
-
-	}
-	last_reset = reset;*/
-	
 	if(last_mole1 && (mole1==0)){
 		P1OUT ^= MOLE_LED1;			//temp test
+		soundOn ^= OUTMOD_4;
 	}
 	last_mole1 = mole1;
 	
 	if(last_mole2 && (mole2==0)){
 		P1OUT ^= MOLE_LED2;			//temp test
+		soundOn ^= OUTMOD_4;
 	}
 	last_mole2 = mole2;
 	
 	if(last_mole3 && (mole3==0)){
 		P1OUT ^= MOLE_LED3;			//temp test
+		soundOn ^= OUTMOD_4;
 	}
 	last_mole3 = mole3;
 	
 	if(last_mole4 && (mole4==0)){
 		P1OUT ^= MOLE_LED4;			//temp test
+		soundOn ^= OUTMOD_4;
 	}
 	last_mole4 = mole4;
 }
