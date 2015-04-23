@@ -1,7 +1,7 @@
 ******************************************************************************
                   MSP430 Linker PC v4.4.4                      
 ******************************************************************************
->> Linked Wed Apr 22 21:04:16 2015
+>> Linked Wed Apr 22 21:24:11 2015
 
 OUTPUT FILE NAME:   <EC450_WackaMole.out>
 ENTRY POINT SYMBOL: "_c_int00_noargs_noexit"  address: 0000c420
