@@ -1,10 +1,10 @@
 ******************************************************************************
                   MSP430 Linker PC v4.4.4                      
 ******************************************************************************
->> Linked Thu Apr 23 14:15:23 2015
+>> Linked Thu Apr 23 22:23:15 2015
 
 OUTPUT FILE NAME:   <EC450_WackaMole.out>
-ENTRY POINT SYMBOL: "_c_int00_noargs_noexit"  address: 0000c5ba
+ENTRY POINT SYMBOL: "_c_int00_noargs_noexit"  address: 0000c5d4
 
 
 MEMORY CONFIGURATION
@@ -14,12 +14,12 @@ MEMORY CONFIGURATION
   SFR                   00000000   00000010  00000000  00000010  RWIX
   PERIPHERALS_8BIT      00000010   000000f0  00000000  000000f0  RWIX
   PERIPHERALS_16BIT     00000100   00000100  00000000  00000100  RWIX
-  RAM                   00000200   00000200  0000007f  00000181  RWIX
+  RAM                   00000200   00000200  00000075  0000018b  RWIX
   INFOD                 00001000   00000040  00000002  0000003e  RWIX
   INFOC                 00001040   00000040  00000000  00000040  RWIX
   INFOB                 00001080   00000040  00000000  00000040  RWIX
   INFOA                 000010c0   00000040  00000000  00000040  RWIX
-  FLASH                 0000c000   00003fe0  00000670  00003970  RWIX
+  FLASH                 0000c000   00003fe0  00000690  00003950  RWIX
   INT00                 0000ffe0   00000002  00000002  00000000  RWIX
   INT01                 0000ffe2   00000002  00000000  00000002  RWIX
   INT02                 0000ffe4   00000002  00000002  00000000  RWIX
@@ -43,50 +43,50 @@ SECTION ALLOCATION MAP
  output                                  attributes/
 section   page    origin      length       input sections
 --------  ----  ----------  ----------   ----------------
-.data      0    00000200    00000028     UNINITIALIZED
-                  00000200    00000028     main.obj (.data)
+.data      0    00000200    00000020     UNINITIALIZED
+                  00000200    0000001c     main.obj (.data)
+                  0000021c    00000004     main.obj (.data:tones)
 
-.bss       0    00000228    00000007     UNINITIALIZED
-                  00000228    00000002     (.common:new_high_score)
-                  0000022a    00000001     (.common:last_mole1)
-                  0000022b    00000001     (.common:last_mole2)
-                  0000022c    00000001     (.common:last_mole3)
-                  0000022d    00000001     (.common:last_mole4)
-                  0000022e    00000001     (.common:last_play)
+.bss       0    00000220    00000005     UNINITIALIZED
+                  00000220    00000001     (.common:last_mole1)
+                  00000221    00000001     (.common:last_mole2)
+                  00000222    00000001     (.common:last_mole3)
+                  00000223    00000001     (.common:last_mole4)
+                  00000224    00000001     (.common:last_play)
 
 .stack     0    000003b0    00000050     UNINITIALIZED
                   000003b0    00000002     rts430_eabi.lib : boot.obj (.stack)
                   000003b2    0000004e     --HOLE--
 
-.text      0    0000c000    00000652     
-                  0000c000    0000038e     main.obj (.text:WDT_interval_handler)
-                  0000c38e    00000064     rts430_eabi.lib : copy_decompress_rle.obj (.text:__TI_decompress_rle_core)
-                  0000c3f2    0000005e     main.obj (.text:random_gen)
-                  0000c450    00000058     rts430_eabi.lib : autoinit.obj (.text:_auto_init)
-                  0000c4a8    00000046     main.obj (.text:main)
-                  0000c4ee    0000002e     main.obj (.text:init_buttons)
-                  0000c51c    0000002a     main.obj (.text:sound_handler)
-                  0000c546    0000002a     main.obj (.text:writeDword)
-                  0000c570    00000026     main.obj (.text:init_timer)
-                  0000c596    00000024     main.obj (.text:eraseD)
-                  0000c5ba    0000001a     rts430_eabi.lib : boot_special.obj (.text:_c_int00_noargs_noexit)
-                  0000c5d4    00000014                     : copy_zero_init.obj (.text:decompress:ZI:__TI_zero_init)
-                  0000c5e8    00000014                     : mult16.obj (.text)
-                  0000c5fc    00000012                     : copy_decompress_none.obj (.text:decompress:none:__TI_decompress_none)
-                  0000c60e    00000012                     : memcpy.obj (.text:memcpy)
-                  0000c620    00000010                     : epilog.obj (.text)
-                  0000c630    0000000e     main.obj (.text:updateData)
-                  0000c63e    00000006     rts430_eabi.lib : isr_trap.obj (.text:_isr:__TI_ISR_TRAP)
-                  0000c644    00000006                     : copy_decompress_rle.obj (.text:decompress:rle24:__TI_decompress_rle24)
-                  0000c64a    00000004                     : pre_init.obj (.text:_system_pre_init)
-                  0000c64e    00000004                     : exit.obj (.text:abort)
+.text      0    0000c000    0000066c     
+                  0000c000    0000039c     main.obj (.text:WDT_interval_handler)
+                  0000c39c    00000064     rts430_eabi.lib : copy_decompress_rle.obj (.text:__TI_decompress_rle_core)
+                  0000c400    0000005e     main.obj (.text:random_gen)
+                  0000c45e    00000058     rts430_eabi.lib : autoinit.obj (.text:_auto_init)
+                  0000c4b6    00000040     main.obj (.text:main)
+                  0000c4f6    00000036     main.obj (.text:sound_handler)
+                  0000c52c    0000002e     main.obj (.text:init_buttons)
+                  0000c55a    0000002c     main.obj (.text:init_timer)
+                  0000c586    0000002a     main.obj (.text:writeDword)
+                  0000c5b0    00000024     main.obj (.text:eraseD)
+                  0000c5d4    0000001a     rts430_eabi.lib : boot_special.obj (.text:_c_int00_noargs_noexit)
+                  0000c5ee    00000014                     : copy_zero_init.obj (.text:decompress:ZI:__TI_zero_init)
+                  0000c602    00000014                     : mult16.obj (.text)
+                  0000c616    00000012                     : copy_decompress_none.obj (.text:decompress:none:__TI_decompress_none)
+                  0000c628    00000012                     : memcpy.obj (.text:memcpy)
+                  0000c63a    00000010                     : epilog.obj (.text)
+                  0000c64a    0000000e     main.obj (.text:updateData)
+                  0000c658    00000006     rts430_eabi.lib : isr_trap.obj (.text:_isr:__TI_ISR_TRAP)
+                  0000c65e    00000006                     : copy_decompress_rle.obj (.text:decompress:rle24:__TI_decompress_rle24)
+                  0000c664    00000004                     : pre_init.obj (.text:_system_pre_init)
+                  0000c668    00000004                     : exit.obj (.text:abort)
 
-.cinit     0    0000c652    0000001e     
-                  0000c652    0000000b     (.cinit..data.load) [load image, compression = rle]
-                  0000c65d    00000001     --HOLE-- [fill = 0]
-                  0000c65e    00000006     (__TI_handler_table)
-                  0000c664    00000004     (.cinit..bss.load) [load image, compression = zero_init]
-                  0000c668    00000008     (__TI_cinit_table)
+.cinit     0    0000c66c    00000024     
+                  0000c66c    00000011     (.cinit..data.load) [load image, compression = rle]
+                  0000c67d    00000001     --HOLE-- [fill = 0]
+                  0000c67e    00000006     (__TI_handler_table)
+                  0000c684    00000004     (.cinit..bss.load) [load image, compression = zero_init]
+                  0000c688    00000008     (__TI_cinit_table)
 
 .init_array 
 *          0    0000c000    00000000     UNINITIALIZED
@@ -149,14 +149,14 @@ NMI        0    0000fffc    00000002
 
 LINKER GENERATED COPY TABLES
 
-__TI_cinit_table @ 0000c668 records: 2, size/record: 4, table size: 8
-	.data: load addr=0000c652, load size=0000000b bytes, run addr=00000200, run size=00000028 bytes, compression=rle
-	.bss: load addr=0000c664, load size=00000004 bytes, run addr=00000228, run size=00000007 bytes, compression=zero_init
+__TI_cinit_table @ 0000c688 records: 2, size/record: 4, table size: 8
+	.data: load addr=0000c66c, load size=00000011 bytes, run addr=00000200, run size=00000020 bytes, compression=rle
+	.bss: load addr=0000c684, load size=00000004 bytes, run addr=00000220, run size=00000005 bytes, compression=zero_init
 
 
 LINKER GENERATED HANDLER TABLE
 
-__TI_handler_table @ 0000c65e records: 3, size/record: 2, table size: 6
+__TI_handler_table @ 0000c67e records: 3, size/record: 2, table size: 6
 	index: 0, handler: __TI_zero_init
 	index: 1, handler: __TI_decompress_rle24
 	index: 2, handler: __TI_decompress_none
@@ -176,7 +176,7 @@ address   name
 00000057  BCSCTL1                 
 00000058  BCSCTL2                 
 00000053  BCSCTL3                 
-0000c64e  C$$EXIT                 
+0000c668  C$$EXIT                 
 00000059  CACTL1                  
 0000005a  CACTL2                  
 000010fb  CALBC1_12MHZ            
@@ -269,15 +269,15 @@ address   name
 0000fff4  WDT_interval_handler_ptr
 00000400  __STACK_END             
 00000050  __STACK_SIZE            
-0000c668  __TI_CINIT_Base         
-0000c670  __TI_CINIT_Limit        
-0000c65e  __TI_Handler_Table_Base 
-0000c664  __TI_Handler_Table_Limit
+0000c688  __TI_CINIT_Base         
+0000c690  __TI_CINIT_Limit        
+0000c67e  __TI_Handler_Table_Base 
+0000c684  __TI_Handler_Table_Limit
 UNDEFED   __TI_INITARRAY_Base     
 UNDEFED   __TI_INITARRAY_Limit    
-0000c63e  __TI_ISR_TRAP           
-0000c5fc  __TI_decompress_none    
-0000c644  __TI_decompress_rle24   
+0000c658  __TI_ISR_TRAP           
+0000c616  __TI_decompress_none    
+0000c65e  __TI_decompress_rle24   
 0000ffe0  __TI_int00              
 0000ffe4  __TI_int02              
 0000ffe6  __TI_int03              
@@ -291,63 +291,59 @@ UNDEFED   __TI_INITARRAY_Limit
 0000fff8  __TI_int12              
 0000fffa  __TI_int13              
 0000fffc  __TI_int14              
-0000c5d4  __TI_zero_init          
+0000c5ee  __TI_zero_init          
 ffffffff  __binit__               
 ffffffff  __c_args__              
-0000c62c  __mspabi_func_epilog_1  
-0000c62a  __mspabi_func_epilog_2  
-0000c628  __mspabi_func_epilog_3  
-0000c626  __mspabi_func_epilog_4  
-0000c624  __mspabi_func_epilog_5  
-0000c622  __mspabi_func_epilog_6  
-0000c620  __mspabi_func_epilog_7  
-0000c5e8  __mspabi_mpyi           
-0000c5e8  __mspabi_mpyi_sw        
-0000c450  _auto_init              
-0000c5ba  _c_int00_noargs_noexit  
+0000c646  __mspabi_func_epilog_1  
+0000c644  __mspabi_func_epilog_2  
+0000c642  __mspabi_func_epilog_3  
+0000c640  __mspabi_func_epilog_4  
+0000c63e  __mspabi_func_epilog_5  
+0000c63c  __mspabi_func_epilog_6  
+0000c63a  __mspabi_func_epilog_7  
+0000c602  __mspabi_mpyi           
+0000c602  __mspabi_mpyi_sw        
+0000c45e  _auto_init              
+0000c5d4  _c_int00_noargs_noexit  
 0000fffe  _reset_vector           
 000003b0  _stack                  
-0000c64a  _system_pre_init        
-0000c64e  abort                   
+0000c664  _system_pre_init        
+0000c668  abort                   
 ffffffff  binit                   
-00000203  countOn                 
-00000212  current_score           
-0000c596  eraseD                  
+0000020e  current_score           
+0000c5b0  eraseD                  
 00001000  high_score              
-00000208  hits                    
-0000c4ee  init_buttons            
-0000c570  init_timer              
-0000022a  last_mole1              
-0000022b  last_mole2              
-0000022c  last_mole3              
-0000022d  last_mole4              
-0000022e  last_play               
-0000c4a8  main                    
-0000c60e  memcpy                  
-00000206  misses                  
-00000214  mole1_count             
-0000021c  mole1_on                
-00000216  mole2_count             
-0000021e  mole2_on                
-00000218  mole3_count             
-00000220  mole3_on                
-0000021a  mole4_count             
-00000222  mole4_on                
-0000020e  mole_counter            
-00000210  mole_interval           
-00000228  new_high_score          
-0000020c  next_mole               
-00000224  rand                    
-00000226  rand_on                 
-0000c3f2  random_gen              
+00000206  hits                    
+0000c52c  init_buttons            
+0000c55a  init_timer              
+00000220  last_mole1              
+00000221  last_mole2              
+00000222  last_mole3              
+00000223  last_mole4              
+00000224  last_play               
+0000c4b6  main                    
+0000c628  memcpy                  
+00000205  misses                  
+00000214  mole1_on                
+00000216  mole2_on                
+00000218  mole3_on                
+0000021a  mole4_on                
+0000020a  mole_counter            
+0000020c  mole_interval           
+00000208  next_mole               
+00000210  rand                    
+00000212  rand_on                 
+0000c400  random_gen              
 00000200  soundOn                 
-00000204  soundTime               
-0000c51c  sound_handler           
+00000202  soundTime               
+0000c4f6  sound_handler           
 0000fffa  sound_handler_ptr       
-0000020a  stage                   
-00000202  state                   
-0000c630  updateData              
-0000c546  writeDword              
+00000207  stage                   
+00000204  state                   
+00000203  tone_index              
+0000021c  tones                   
+0000c64a  updateData              
+0000c586  writeDword              
 
 
 GLOBAL SYMBOLS: SORTED BY Symbol Address 
@@ -441,32 +437,28 @@ address   name
 000001b4  ADC10MEM                
 000001bc  ADC10SA                 
 00000200  soundOn                 
-00000202  state                   
-00000203  countOn                 
-00000204  soundTime               
-00000206  misses                  
-00000208  hits                    
-0000020a  stage                   
-0000020c  next_mole               
-0000020e  mole_counter            
-00000210  mole_interval           
-00000212  current_score           
-00000214  mole1_count             
-00000216  mole2_count             
-00000218  mole3_count             
-0000021a  mole4_count             
-0000021c  mole1_on                
-0000021e  mole2_on                
-00000220  mole3_on                
-00000222  mole4_on                
-00000224  rand                    
-00000226  rand_on                 
-00000228  new_high_score          
-0000022a  last_mole1              
-0000022b  last_mole2              
-0000022c  last_mole3              
-0000022d  last_mole4              
-0000022e  last_play               
+00000202  soundTime               
+00000203  tone_index              
+00000204  state                   
+00000205  misses                  
+00000206  hits                    
+00000207  stage                   
+00000208  next_mole               
+0000020a  mole_counter            
+0000020c  mole_interval           
+0000020e  current_score           
+00000210  rand                    
+00000212  rand_on                 
+00000214  mole1_on                
+00000216  mole2_on                
+00000218  mole3_on                
+0000021a  mole4_on                
+0000021c  tones                   
+00000220  last_mole1              
+00000221  last_mole2              
+00000222  last_mole3              
+00000223  last_mole4              
+00000224  last_play               
 000003b0  _stack                  
 00000400  __STACK_END             
 00001000  high_score              
@@ -484,37 +476,37 @@ address   name
 000010fe  CALDCO_1MHZ             
 000010ff  CALBC1_1MHZ             
 0000c000  WDT_interval_handler    
-0000c3f2  random_gen              
-0000c450  _auto_init              
-0000c4a8  main                    
-0000c4ee  init_buttons            
-0000c51c  sound_handler           
-0000c546  writeDword              
-0000c570  init_timer              
-0000c596  eraseD                  
-0000c5ba  _c_int00_noargs_noexit  
-0000c5d4  __TI_zero_init          
-0000c5e8  __mspabi_mpyi           
-0000c5e8  __mspabi_mpyi_sw        
-0000c5fc  __TI_decompress_none    
-0000c60e  memcpy                  
-0000c620  __mspabi_func_epilog_7  
-0000c622  __mspabi_func_epilog_6  
-0000c624  __mspabi_func_epilog_5  
-0000c626  __mspabi_func_epilog_4  
-0000c628  __mspabi_func_epilog_3  
-0000c62a  __mspabi_func_epilog_2  
-0000c62c  __mspabi_func_epilog_1  
-0000c630  updateData              
-0000c63e  __TI_ISR_TRAP           
-0000c644  __TI_decompress_rle24   
-0000c64a  _system_pre_init        
-0000c64e  C$$EXIT                 
-0000c64e  abort                   
-0000c65e  __TI_Handler_Table_Base 
-0000c664  __TI_Handler_Table_Limit
-0000c668  __TI_CINIT_Base         
-0000c670  __TI_CINIT_Limit        
+0000c400  random_gen              
+0000c45e  _auto_init              
+0000c4b6  main                    
+0000c4f6  sound_handler           
+0000c52c  init_buttons            
+0000c55a  init_timer              
+0000c586  writeDword              
+0000c5b0  eraseD                  
+0000c5d4  _c_int00_noargs_noexit  
+0000c5ee  __TI_zero_init          
+0000c602  __mspabi_mpyi           
+0000c602  __mspabi_mpyi_sw        
+0000c616  __TI_decompress_none    
+0000c628  memcpy                  
+0000c63a  __mspabi_func_epilog_7  
+0000c63c  __mspabi_func_epilog_6  
+0000c63e  __mspabi_func_epilog_5  
+0000c640  __mspabi_func_epilog_4  
+0000c642  __mspabi_func_epilog_3  
+0000c644  __mspabi_func_epilog_2  
+0000c646  __mspabi_func_epilog_1  
+0000c64a  updateData              
+0000c658  __TI_ISR_TRAP           
+0000c65e  __TI_decompress_rle24   
+0000c664  _system_pre_init        
+0000c668  C$$EXIT                 
+0000c668  abort                   
+0000c67e  __TI_Handler_Table_Base 
+0000c684  __TI_Handler_Table_Limit
+0000c688  __TI_CINIT_Base         
+0000c690  __TI_CINIT_Limit        
 0000ffe0  __TI_int00              
 0000ffe4  __TI_int02              
 0000ffe6  __TI_int03              
@@ -537,4 +529,4 @@ ffffffff  binit
 UNDEFED   __TI_INITARRAY_Base     
 UNDEFED   __TI_INITARRAY_Limit    
 
-[182 symbols]
+[178 symbols]
