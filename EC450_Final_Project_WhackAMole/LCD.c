@@ -52,7 +52,7 @@ void opening_screen()
 	TXByte = 0xFE; Transmit();
 	TXByte = 0x01; Transmit();
 
-	TXString("  WACK-A-MOLE!!    Loading...");
+	TXString("  WHACK-A-MOLE!!   Loading...");
 }
 
 //Waiting for player to press Play Button
@@ -126,35 +126,33 @@ void ConfigureTimerUart(void)
 {
 	TA1CCTL0 = OUT;                             // TXD Idle as Mark
 	TA1CTL = TASSEL_2 + MC_2 + ID_0;            // SMCLK/8, continuous mode
-	P2SEL |= TXD;                              //
-	P2DIR |= TXD;                              //
+	P2SEL |= TXD;
+	P2DIR |= TXD;
 }
 
 void Transmit()
 {
 	BitCount = 0xA;                             // Load Bit counter, 8data + ST/SP
-	/*while (TA1CCR0 != TAR)                       // Prevent async capture
-		TA1CCR0 = TAR;*/                             // Current state of TA counter
-	TA1CCR0 += Bitime;                     // Some time till first bit
-	TXByte |= 0x100;                        // Add mark stop bit to TXByte
-	TXByte = TXByte << 1;                 // Add space start bit
-	TA1CCTL0 =  CCIS0 + OUTMOD0 + CCIE;          // TXD = mark = idle
-	while ( TA1CCTL0 & CCIE );                   // Wait for TX completion
+	TA1CCR0 += Bitime;                     		// Some time till first bit
+	TXByte |= 0x100;                        	// Add mark stop bit to TXByte
+	TXByte = TXByte << 1;                 		// Add space start bit
+	TA1CCTL0 =  CCIS0 + OUTMOD0 + CCIE;         // TXD = mark = idle
+	while ( TA1CCTL0 & CCIE );                  // Wait for TX completion
 }
 
 // Timer A1 interrupt handler
 interrupt void Timer_A()
 {
-	TA1CCR0 += Bitime;                           // Add Offset to CCR0
-	if (TA1CCTL0 & CCIS0)                        // TX on CCI0B?
+	TA1CCR0 += Bitime;                          // Add Offset to CCR0
+	if (TA1CCTL0 & CCIS0)                       // TX on CCI0B?
 	{
 		if ( BitCount == 0)
-			TA1CCTL0 &= ~ CCIE;                     // All bits TXed, disable interrupt
+			TA1CCTL0 &= ~ CCIE;                 // All bits TXed, disable interrupt
 		else
 		{
-			TA1CCTL0 |=  OUTMOD2;                    // TX Space
+			TA1CCTL0 |=  OUTMOD2;               // TX Space
 			if (TXByte & 0x01)
-				TA1CCTL0 &= ~ OUTMOD2;                   // TX Mark
+				TA1CCTL0 &= ~ OUTMOD2;          // TX Mark
 			TXByte = TXByte >> 1;
 			BitCount --;
 		}
