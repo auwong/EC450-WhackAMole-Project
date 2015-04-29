@@ -114,11 +114,11 @@ void main()
 	BCSCTL1 = CALBC1_8MHZ; 		// 1Mhz calibration for clock
 	DCOCTL = CALDCO_8MHZ;
 
-	WDTCTL = (WDTPW + WDTTMSEL + WDTCNTCL + 0 + 1); // initialize watch dog timer
+	WDTCTL = (WDTPW + WDTTMSEL + WDTCNTCL + 0); // initialize watch dog timer
 
 	// initializing global variables
-	next_mole = 1000;
-	mole_counter = 800;
+	next_mole = 250;
+	mole_counter = 200;
 	mole1_counter = mole_counter;
 	mole2_counter = mole_counter;
 	mole3_counter = mole_counter;
@@ -234,7 +234,7 @@ unsigned random_gen(void)
 
 void interrupt sound_handler(){
 	TA0CCR0 += tones[tone_index];
-	if (soundOn && soundTime>=80){
+	if (soundOn && soundTime>=20){
 		soundOn &= (~OUTMOD_4);
 		soundTime = 0;
 	}
@@ -286,8 +286,12 @@ interrupt void WDT_interval_handler()
 						mole4_on = 1;
 				} break;
 			}
-			next_mole = 1000 - (stage*100); // Time between moles decreases as game proceeds
-			mole_counter = 800 - (stage*50); // Time interval for mole to be up
+			next_mole = 250 - (stage*25); // Time between moles decreases as game proceeds
+			mole_counter = 200 - (stage*12); // Time interval for mole to be up
+			if(next_mole<25)
+				next_mole = 20;
+			if(mole_counter<20)
+				mole_counter = 12;
 		}
 
 		if(mole1_on){					// If mole 1 is "up"
@@ -367,8 +371,8 @@ interrupt void WDT_interval_handler()
 		hits = 0;
 		stage = 0;
 		current_score=0;
-		next_mole = 1000;
-		mole_counter = 800;
+		next_mole = 250;
+		mole_counter = 200;
 		mole1_on = 0;
 		mole2_on = 0;
 		mole3_on = 0;

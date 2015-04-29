@@ -52,7 +52,7 @@ void opening_screen()
 	TXByte = 0xFE; Transmit();
 	TXByte = 0x01; Transmit();
 
-	TXString("  WHACK-A-MOLE!!   Loading...");
+	TXString(" WHACK-A-MOLE!!    Loading...");
 }
 
 //Waiting for player to press Play Button
